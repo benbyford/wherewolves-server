@@ -148,8 +148,11 @@ io.on('connection', function(socket){
     socket.on("join",(roomId) =>{
         
         socket.join(roomId);
-        socket.emit("joined", roomId);
         socket.data.room = roomId;
+
+        socket.emit("joined", roomId);
+        socket.emit("userId", socket.id);
+        
 
         addUserToRoom(socket.id, roomId);
 
@@ -162,6 +165,7 @@ io.on('connection', function(socket){
         // emit to self
         // peer number and room data
         socket.emit("peerEnter", appData.roomData[roomId].peers);
+        
         if(appData.roomData[socket.data.room].data !== undefined) socket.emit("updates", appData.roomData[socket.data.room].data);
     });
 
@@ -181,6 +185,3 @@ io.on('connection', function(socket){
         socket.to(socket.data.room).emit("updates", msg);
     });    
 });
-
-// todo
-// track num users in rooms, remove rooms if empty
