@@ -206,15 +206,13 @@ io.on('connection', function(socket){
         socket.data.host = true;
     });
 
-    socket.on('changeState', async (msg) => {
+    socket.on('changeState', (msg) => {
         // send send to room but not self
         console.log("stateChange to "+msg);
 
         switch (msg) {
             case "start":
                 setupPlayers();
-                
-                setup
                 break;
             default:
                 console.log("unknown state request");
@@ -228,9 +226,10 @@ io.on('connection', function(socket){
                 let i = 0;
                 let len = appData.roomData[socket.data.room].peers - 1;
                 sockets.forEach(socket => {
-                    if(!socket.data.host)
-                    console.log(socket.data.room);
-                    io.to(socket.id).emit("setUser", playerCharacters[i]);
+                    if(!socket.data.host){
+                        io.to(socket.id).emit("setUser", playerCharacters[i]);
+                        i++;
+                    }
                 })
             }
         ).catch(err => {
