@@ -87,6 +87,7 @@ const removeAllData = () => {
     logAll(["Tearing down rooms and peers"], "No users")
     appData.peers.length = 0;
     appData.rooms.length = 0;
+    appData.roomData = {};
 }
 
 // log all rooms
@@ -127,6 +128,10 @@ const addUserToRoom = (id, roomId) =>{
     }else{
         appData.roomData[roomId].peers++;
     }
+}
+
+async function getPeersInRoom(roomId) {
+    return await io.in(roomId).fetchSockets();
 }
 
 
@@ -180,17 +185,33 @@ io.on('connection', function(socket){
         socket.data.host = true;
     });
 
-    socket.on('changeState', function(msg){
+    socket.on('changeState', async (msg) => {
         // send send to room but not self
         console.log("stateChange to "+msg);
 
         switch (msg) {
             case "start":
-                socket.to(socket.data.room).emit("stateChangeTo", msg);
+                setupPlayers();
+                
+                setup
                 break;
             default:
                 console.log("unknown state request");
                 break;
         }
-    });    
+    });
+
+    function setupPlayers(){
+        getPeersInRoom(socket.data.room).then(
+            sockets => {
+                sockets.forEach(socket =>{
+                    console.log(socket);
+                    console.log(socket.room);
+                    console.log(socket.host);
+                })
+            }
+        );
+
+        // io.to(socket.data.room).emit("stateChangeTo", msg);
+    }
 });
