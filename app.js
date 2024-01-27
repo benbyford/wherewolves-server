@@ -149,11 +149,11 @@ io.on('connection', function(socket){
         
         socket.join(roomId);
         socket.data.room = roomId;
+        socket.data.host = false;
 
         socket.emit("joined", roomId);
         socket.emit("userId", socket.id);
         
-
         addUserToRoom(socket.id, roomId);
 
         showAllPeers();
@@ -165,8 +165,6 @@ io.on('connection', function(socket){
         // emit to self
         // peer number and room data
         socket.emit("peerEnter", appData.roomData[roomId].peers);
-        
-        if(appData.roomData[socket.data.room].data !== undefined) socket.emit("updates", appData.roomData[socket.data.room].data);
     });
 
     socket.on('disconnect', function(){
@@ -177,11 +175,22 @@ io.on('connection', function(socket){
         testPeers();
     });
 
-    socket.on('messages', function(msg){
-        // send send to room but not self
-        appData.roomData[socket.data.room].data = msg;
-        console.log(msg);
+    socket.on('markAsHost', function(msg){
+        socket.data.host = true;
+    });
 
-        socket.to(socket.data.room).emit("updates", msg);
+    socket.on('changeState', function(msg){
+        // send send to room but not self
+        appData.roomData[socket.data.room].data["state"] = msg;
+        console.log("stateChange to "+msg);
+
+        switch (msg) {
+            case "start":
+                socket.to(socket.data.room).emit("stateChangeTo", msg);
+                break;
+            default:
+                console.log("unknown state request");
+                break;
+        }
     });    
 });
