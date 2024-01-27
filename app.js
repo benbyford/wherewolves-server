@@ -134,10 +134,27 @@ async function getPeersInRoom(roomId) {
     return await io.in(roomId).fetchSockets();
 }
 
-
 /*
-* Socket stuff
-*/
+* Game data
+*/ 
+
+const playerCharacters = [
+    {
+        name:"Bertha",
+    },
+    {
+        name:"Joey Joe Joe",
+    },
+    {
+        name:"Kenneth",
+    },
+    {
+        name:"Cubert",
+    },
+    {
+        name:"Harold",
+    }
+];
 
 // stat management
 const appData = {};
@@ -145,6 +162,10 @@ const appData = {};
 appData.rooms = [];
 appData.roomData = {};
 appData.peers = [];
+
+/*
+* Socket stuff
+*/
 
 io.on('connection', function(socket){
     
@@ -204,13 +225,17 @@ io.on('connection', function(socket){
     function setupPlayers(){
         getPeersInRoom(socket.data.room).then(
             sockets => {
-                sockets.forEach(socket =>{
-                    console.log(socket);
-                    console.log(socket.room);
-                    console.log(socket.host);
+                let i = 0;
+                let len = appData.roomData[socket.data.room].peers - 1;
+                sockets.forEach(socket => {
+                    if(!socket.data.host)
+                    console.log(socket.data.room);
+                    io.to(socket.id).emit("setUser", playerCharacters[i]);
                 })
             }
-        );
+        ).catch(err => {
+            console.log("SocketPeer error" + err);
+        });
 
         // io.to(socket.data.room).emit("stateChangeTo", msg);
     }
