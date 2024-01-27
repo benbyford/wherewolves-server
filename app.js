@@ -5,6 +5,7 @@ const app = express();
 const server = require('http').createServer(app);
 const cors = require("cors");
 const io = require('socket.io')(server, {
+    origins: "*", 
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
