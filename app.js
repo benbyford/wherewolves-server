@@ -182,7 +182,6 @@ io.on('connection', function(socket){
 
     socket.on('changeState', function(msg){
         // send send to room but not self
-        appData.roomData[socket.data.room].data["state"] = msg;
         console.log("stateChange to "+msg);
 
         switch (msg) {
