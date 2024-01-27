@@ -32,15 +32,15 @@ server.listen(port, function (error) {
 
 /*
 * Express setup
-*/
-app.use(express.static(__dirname + '/node_modules'));
-app.use(express.static('public')); // use public folder for assets in html
-app.use(express.static('public/js')); // use public folder for assets in html
+// */
+// app.use(express.static(__dirname + '/node_modules'));
+// app.use(express.static('public')); // use public folder for assets in html
+// app.use(express.static('public/js')); // use public folder for assets in html
 
 // routes
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/index.html');
-});
+// app.get('/', function(req, res) {
+//     res.sendFile(__dirname + '/index.html');
+// });
 
 
 
