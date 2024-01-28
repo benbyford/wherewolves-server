@@ -63,105 +63,70 @@ const logAll = (arr, name = null) => {
 // add user to room
 const addRoom = id => {
     // check its a new room
-    if(appData.rooms.indexOf(id) == -1) appData.rooms.push(id);
+    if(!roomData.hasOwnProperty(id)){ 
+        roomData[id] = {};
+        roomData[id].host = "";
+        roomData[id].peers = [];
+    }
 }
 // remove room
 const removeRoom = id => {
     // get room index and remove
-    const index = appData.rooms.indexOf(id);
-    if (index > -1) appData.rooms.splice(index, 1);
+    if (roomData.hasOwnProperty(id)) delete roomData[id];
 }
 
-const addUser = id => {
-    appData.peers.push(id);
-}
 const removeUser = user => {
     // remove user from peers array
-    const index = appData.peers.indexOf(user.id);
-    if (index > -1) appData.peers.splice(index, 1);
-
-    // decrement user from peers in room
-    if(appData.roomData.hasOwnProperty(user.data.room)) appData.roomData[user.data.room].peers--;
+    const index = roomData[user.data.room].peers.indexOf(user.id);
+    if (index > -1) roomData[user.data.room].peers.splice(index, 1);
 }
+
 const removeAllData = () => {
     logAll(["Tearing down rooms and peers"], "No users")
-    appData.peers.length = 0;
-    appData.rooms.length = 0;
-    appData.roomData = {};
+    roomData = {};
 }
 
 // log all rooms
 const showAllRooms = () => {
-    logAll(appData.rooms, "Rooms")
+    logAll(Object.keys(roomData), "Rooms")
 }
 // log all rooms
 const showAllPeers = () => {
-    logAll(appData.peers, "Peers")
+    const rooms = Object.keys(roomData);
+    rooms.forEach(room => {
+        logAll(room.peers, "Peers in room"+ room.toString())
+    });
 }
 
-async function showAllSockets(){
-    const sockets = await io.fetchSockets();
-    console.log("***");
-    console.log("num of users: ",sockets.length);
-
-    for (const socket of sockets) {
-        console.log("id:",socket.id);
-        console.log("rooms:",socket.rooms);
-        console.log("data:",socket.data);
-    }
-    console.log("---");
+const checkNotHost = (roomid, id) => {
+    // return false if user is host
+    if(roomData[roomid].host != id) return true;
+    return false;
 }
 
 const testPeers = () => {
     // delete rooms if none being used
-    if(appData.peers.length == 0) removeAllData();
+    if(!Object.keys(roomData)) removeAllData();
 }
 
-const addUserToRoom = (id, roomId) =>{
+const addUserToRoom = (id, roomId) =>{ 
     
-    addUser(id);
     addRoom(roomId);
-
-    if(!appData.roomData.hasOwnProperty(roomId)){
-        appData.roomData[roomId] = {}
-        appData.roomData[roomId].peers = 1;
-    }else{
-        appData.roomData[roomId].peers++;
-    }
+    
+    // add user to room
+    roomData[roomId].peers.push(id);
 }
 
-async function getPeersInRoom(roomId) {
-    return await io.in(roomId).fetchSockets();
-}
+
 
 /*
 * Game data
 */ 
 
-const playerCharacters = [
-    {
-        name:"Bertha",
-    },
-    {
-        name:"Joey Joe Joe",
-    },
-    {
-        name:"Kenneth",
-    },
-    {
-        name:"Cubert",
-    },
-    {
-        name:"Harold",
-    }
-];
+const playerCharacterNum = 6; 
 
 // stat management
-const appData = {};
-
-appData.rooms = [];
-appData.roomData = {};
-appData.peers = [];
+const roomData = {};
 
 /*
 * Socket stuff
@@ -174,7 +139,9 @@ io.on('connection', function(socket){
 
     socket.on("join",(roomId) =>{
         
+        // add user to room
         socket.join(roomId);
+
         socket.data.room = roomId;
         socket.data.host = false;
 
@@ -186,12 +153,8 @@ io.on('connection', function(socket){
         showAllPeers();
         showAllRooms();
         
-        // emit peer number to both room
-        socket.to(roomId).emit("peerEnter", appData.roomData[roomId].peers);
-        
-        // emit to self
-        // peer number and room data
-        socket.emit("peerEnter", appData.roomData[roomId].peers);
+        // emit peer number to room
+        io.to(roomId).emit("peerEnter", roomData[roomId].peers.length);
     });
 
     socket.on('disconnect', function(){
@@ -204,6 +167,8 @@ io.on('connection', function(socket){
 
     socket.on('markAsHost', function(msg){
         socket.data.host = true;
+        // remove from peers of room
+        roomData[socket.data.room].host = socket.id;
     });
 
     socket.on('changeState', (msg) => {
@@ -212,30 +177,18 @@ io.on('connection', function(socket){
 
         switch (msg) {
             case "start":
-                setupPlayers();
+                let i = 0;
+                let roomId = socket.data.room;
+                roomData[socket.data.room].peers.forEach(id => {
+                    if(checkNotHost(roomId, id)){
+                        io.to(id).emit("setUser", i);
+                        i++;
+                    }
+                })
                 break;
             default:
                 console.log("unknown state request");
                 break;
         }
     });
-
-    function setupPlayers(){
-        getPeersInRoom(socket.data.room).then(
-            sockets => {
-                let i = 0;
-                let len = appData.roomData[socket.data.room].peers - 1;
-                sockets.forEach(socket => {
-                    if(!socket.data.host){
-                        io.to(socket.id).emit("setUser", playerCharacters[i]);
-                        i++;
-                    }
-                })
-            }
-        ).catch(err => {
-            console.log("SocketPeer error" + err);
-        });
-
-        // io.to(socket.data.room).emit("stateChangeTo", msg);
-    }
 });
