@@ -97,7 +97,7 @@ const showAllPeers = () => {
     const rooms = Object.keys(roomData);
     if(rooms){
         rooms.forEach(room => {
-            logAll(room.peers, "Peers in room"+ room.toString())
+            logAll(roomData[room].peers, "Peers in room "+ room.toString())
         });
     }
 }
@@ -183,10 +183,12 @@ io.on('connection', function(socket){
             case "start":
                 let i = 0;
                 let roomId = socket.data.room;
-                roomData[socket.data.room].peers.forEach(id => {
+                roomData[roomId].peers.forEach(id => {
+                    console.log("user: "+id);
                     if(checkNotHost(roomId, id)){
                         io.to(id).emit("setUser", i);
                         i++;
+                        console.log("message sent");
                     }
                 })
                 break;
