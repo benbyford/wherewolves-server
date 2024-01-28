@@ -187,10 +187,18 @@ io.on('connection', function(socket){
                     console.log("user: "+id);
                     if(checkNotHost(roomId, id)){
                         io.to(id).emit("setUser", i);
+
+                        let typeNum = 0;
+                        if(i > 4) typeNum = 1;
+                        if(i > 6) typeNum = 2;
+
+                        io.to(id).emit("setType", typeNum);
                         i++;
-                        console.log("message sent");
                     }
                 })
+                break;
+            case "main":
+                io.to(socket.data.room).emit("stateChange", "main");
                 break;
             default:
                 console.log("unknown state request");
