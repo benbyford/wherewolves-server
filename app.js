@@ -193,6 +193,11 @@ io.on('connection', function(socket){
                         if(i > 3) typeNum = 2;
 
                         io.to(id).emit("setType", typeNum);
+                        io.to(id).emit("data", {
+                                something: "121",
+                                someelse: "21"
+                            }
+                        );
                         i++;
                     }
                 })
