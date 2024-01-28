@@ -189,8 +189,8 @@ io.on('connection', function(socket){
                         io.to(id).emit("setUser", i);
 
                         let typeNum = 0;
-                        if(i > 4) typeNum = 1;
-                        if(i > 6) typeNum = 2;
+                        if(i > 1) typeNum = 1;
+                        if(i > 3) typeNum = 2;
 
                         io.to(id).emit("setType", typeNum);
                         i++;
