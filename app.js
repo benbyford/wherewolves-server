@@ -54,6 +54,8 @@ const logAll = (arr, name = null) => {
     console.log("***");
     if(name) console.log(name);
 
+    if(typeof arr != "object") return;
+
     if(arr.length){
         arr.forEach( item => {
             console.log(item);
@@ -93,9 +95,11 @@ const showAllRooms = () => {
 // log all rooms
 const showAllPeers = () => {
     const rooms = Object.keys(roomData);
-    rooms.forEach(room => {
-        logAll(room.peers, "Peers in room"+ room.toString())
-    });
+    if(rooms){
+        rooms.forEach(room => {
+            logAll(room.peers, "Peers in room"+ room.toString())
+        });
+    }
 }
 
 const checkNotHost = (roomid, id) => {
